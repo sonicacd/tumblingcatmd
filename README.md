@@ -2,11 +2,11 @@
   <img src="src/assets/cat-md-icon.png" width="96" height="96" alt="滚猫md 图标">
 </p>
 
-# 滚猫 md / TumblingCat
+# 滚猫 md / TumblingCat — Markdown 阅读器与编辑器
 
-一款轻量的 Windows 与 Android Markdown 阅读与编辑软件，支持 TextPack 单文件图文文档、所见即所得、源码编辑、专注阅读，以及面向大文件的可视区分块渲染。
+一款免费开源的 Windows 与 Android Markdown 阅读器和编辑器，支持 TextPack 单文件图文文档、所见即所得、源码编辑、专注阅读，以及面向大文件的可视区分块渲染。
 
-A lightweight Windows and Android Markdown reader and editor with single-file TextPack documents, WYSIWYG editing, source editing, focused reading, and viewport rendering for large files.
+A free, open-source Markdown reader and editor for Windows and Android, with single-file TextPack documents, WYSIWYG editing, source editing, focused reading, and viewport rendering for large files.
 
 **[官网 / Website](https://tumblingcat.com/?utm_source=github&utm_medium=referral&utm_campaign=launch_202609) · [English](https://tumblingcat.com/en/?utm_source=github&utm_medium=referral&utm_campaign=launch_202609) · [下载 / Downloads](https://tumblingcat.com/?utm_source=github&utm_medium=referral&utm_campaign=launch_202609#download) · [Gitee 镜像](https://gitee.com/rhoninarcher/tumblingcatmd)**
 
@@ -16,7 +16,18 @@ A lightweight Windows and Android Markdown reader and editor with single-file Te
 - **图文一起带走 / Keep images with your notes** — TextPack 将 Markdown 与可访问的本地图片放进一个文件。Existing remote images keep their URLs.
 - **本地读写 / Local files** — 无需账号，原文档手动保存；本机恢复草稿提供额外恢复入口。No account required; save the original file manually.
 
-[下载可打开的 TextPack 样例 / Try a TextPack sample](https://tumblingcat.com/samples/tumblingcat-demo.textpack) · [图文分享指南](https://tumblingcat.com/guides/markdown-with-images/) · [Windows 使用指南](https://tumblingcat.com/guides/windows-markdown-editor/) · [Android 使用指南](https://tumblingcat.com/guides/android-markdown-reader/)
+[下载可打开的 TextPack 样例 / Try a TextPack sample](https://tumblingcat.com/samples/tumblingcat-demo.textpack) · [中文使用指南](https://tumblingcat.com/guides/) · [English tutorials](https://tumblingcat.com/en/guides/)
+
+## 按问题查找教程 / Find a guide
+
+| 想完成的任务 / Task | 中文 | English |
+| --- | --- | --- |
+| 在 Windows 打开 .md、编辑 Markdown、设置默认应用 | [Windows Markdown 编辑器使用指南](https://tumblingcat.com/guides/windows-markdown-editor/) | [Open and edit .md files on Windows](https://tumblingcat.com/en/guides/windows-markdown-editor/) |
+| 在安卓手机上阅读本地 Markdown 与图文笔记 | [Android Markdown 阅读器使用指南](https://tumblingcat.com/guides/android-markdown-reader/) | [Read Markdown on Android](https://tumblingcat.com/en/guides/android-markdown-reader/) |
+| 分享 Markdown 时把图片一起带走 | [Markdown 图文打包与分享](https://tumblingcat.com/guides/markdown-with-images/) | [Share Markdown with its images](https://tumblingcat.com/en/guides/markdown-with-images/) |
+| 打开、编辑或解压 .textpack 文件 | [TextPack 文件格式与打开方式](https://tumblingcat.com/guides/textpack-file/) | [Open and extract TextPack files](https://tumblingcat.com/en/guides/textpack-file/) |
+| 排查 Markdown 图片丢失、路径或目录权限问题 | [Markdown 图片不显示怎么办](https://tumblingcat.com/guides/markdown-images-not-showing/) | [Fix missing Markdown images](https://tumblingcat.com/en/guides/markdown-images-not-showing/) |
+| 把 Markdown 正文导出成 PNG、分享长文图片 | [Markdown 转图片与分页导出](https://tumblingcat.com/guides/markdown-to-image/) | [Export Markdown to PNG images](https://tumblingcat.com/en/guides/markdown-to-image/) |
 
 [中文说明](#中文说明) · [English Guide](#english-guide) · [更新记录](CHANGELOG.md) · [v0.5.4 发布说明](docs/releases/v0.5.4.md)
 
