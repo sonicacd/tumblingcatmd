@@ -1622,6 +1622,21 @@ html[data-outline-enabled="false"] .main-area {
   line-height: var(--document-line-height);
 }
 
+/* Keep source headings at the text size, including Setext underline markers. */
+.toastui-editor-md-container .toastui-editor.md-mode .ProseMirror .toastui-editor-md-heading {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.toastui-editor-md-container .toastui-editor.md-mode .ProseMirror :is(
+  .toastui-editor-md-delimiter,
+  .toastui-editor-md-thematic-break,
+  .toastui-editor-md-meta
+) {
+  color: var(--muted-soft);
+}
+
 .toastui-editor-md-container .toastui-editor.md-mode .ProseMirror ::selection {
   background: var(--selection);
 }

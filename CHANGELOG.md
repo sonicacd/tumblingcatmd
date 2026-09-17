@@ -1,5 +1,21 @@
 # 更新记录 / Changelog
 
+## 0.5.4
+
+### 源码标题与语法标记 / Source Headings and Syntax Markers
+
+- 源码视图中的标题沿用正文的字号、字重和行高，改善长标题及下划线式标题的编辑显示。
+- 提高 `#`、`===`、`**` 等语法标记在护眼、纯白、纯黑主题下的可见性；保留文档原有的标题写法与 Markdown 文本。
+- 本次发布 Windows v0.5.4 EXE 与校验文件；Android 继续使用 v0.5.2 APK，尚未包含此次修复。
+
+- Source headings inherit the body font size, weight, and line height, improving editing of long headings and Setext headings.
+- Make syntax markers such as `#`, `===`, and `**` clearer in Eye Care, White, and Black themes while preserving the document's original heading syntax and Markdown text.
+- This release ships the Windows v0.5.4 EXE and checksums. Android remains at v0.5.2 and does not include this fix.
+
+验证结果与平台范围见 [v0.5.4 发布说明](docs/releases/v0.5.4.md)。
+
+See the [v0.5.4 release notes](docs/releases/v0.5.4.md) for validation and platform scope.
+
 ## 0.5.3
 
 ### 视图切换阅读位置 / Reading Position When Switching Views

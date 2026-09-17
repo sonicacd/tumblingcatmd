@@ -12,13 +12,13 @@ A lightweight Windows and Android Markdown reader and editor with single-file Te
 
 ![滚猫 md 的 Windows 所见即所得编辑界面 / Actual Windows WYSIWYG editor, shown in Chinese](https://tumblingcat.com/tumblingcat-windows-editor.png)
 
-- **轻便 / Portable** — Windows v0.5.3 EXE 免安装，依赖系统 WebView2；Android v0.5.2 ARM64 APK 约 10.63 MiB。
+- **轻便 / Portable** — Windows v0.5.4 EXE 免安装，依赖系统 WebView2；Android v0.5.2 ARM64 APK 约 10.63 MiB。
 - **图文一起带走 / Keep images with your notes** — TextPack 将 Markdown 与可访问的本地图片放进一个文件。Existing remote images keep their URLs.
 - **本地读写 / Local files** — 无需账号，原文档手动保存；本机恢复草稿提供额外恢复入口。No account required; save the original file manually.
 
 [下载可打开的 TextPack 样例 / Try a TextPack sample](https://tumblingcat.com/samples/tumblingcat-demo.textpack) · [图文分享指南](https://tumblingcat.com/guides/markdown-with-images/) · [Windows 使用指南](https://tumblingcat.com/guides/windows-markdown-editor/) · [Android 使用指南](https://tumblingcat.com/guides/android-markdown-reader/)
 
-[中文说明](#中文说明) · [English Guide](#english-guide) · [更新记录](CHANGELOG.md) · [v0.5.3 发布说明](docs/releases/v0.5.3.md)
+[中文说明](#中文说明) · [English Guide](#english-guide) · [更新记录](CHANGELOG.md) · [v0.5.4 发布说明](docs/releases/v0.5.4.md)
 
 ---
 
@@ -51,7 +51,7 @@ Windows 版“更多”菜单提供两个入口：
 
 ### Android 版
 
-从 [v0.5.2 Release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2) 下载 `rollcat-md-android-arm64.apk`。本次 v0.5.3 更新 Windows EXE，Android 继续使用 v0.5.2 APK。
+从 [v0.5.2 Release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2) 下载 `rollcat-md-android-arm64.apk`。本次 v0.5.4 更新 Windows EXE，Android 继续使用 v0.5.2 APK。
 
 安装后，可在文件管理器中对 `.md`、`.txt`、`.textpack` 选择“打开方式”→“滚猫md”。应用同时兼容常见 Markdown、文本、TextPack 及通用二进制/ZIP 类型声明，接收后按文件的真实名称检查支持的扩展名。因此部分其他二进制或 ZIP 文件也可能显示滚猫md候选，选择后会提示文件类型不支持。具体入口样式由文件管理器决定。
 
@@ -80,7 +80,7 @@ token 数会显示为“约 N tokens”。这是不依赖网络或特定模型�
 ### 三种视图
 
 - **所见即所得**：直接查看排版效果并编辑内容，适合日常写作。
-- **源码**：直接编辑 Markdown 原文，适合精确控制格式。
+- **源码**：以统一字号直接编辑 Markdown 原文，清晰显示 `#`、`===`、`**` 等语法标记。标题保留原有写法，文字下一行的 `===` 也表示一级标题。
 - **阅读**：只显示渲染后的内容，适合专注阅读。
 
 所见即所得、阅读及大文档轻量预览使用一致的 Obsidian 风格正文节奏，默认采用 16px 正文、1.5 倍行高和 1200px 最大正文宽度。“阅读设置”提供 14 / 16 / 18 / 20 / 24px 字号、1.5 / 1.7 / 2 倍行高，以及 1200 / 1600 / 2100px 或铺满可用宽度四种排版。正文始终适应可用窗口宽度，设置会记住。
@@ -308,7 +308,7 @@ Registration points to the full path of the running EXE. Keep the portable EXE i
 
 ### Android
 
-Download `rollcat-md-android-arm64.apk` from the [v0.5.2 release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2). This v0.5.3 release updates the Windows EXE; Android continues to use the v0.5.2 APK.
+Download `rollcat-md-android-arm64.apk` from the [v0.5.2 release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2). This v0.5.4 release updates the Windows EXE; Android continues to use the v0.5.2 APK.
 
 After installation, choose **Open with → 滚猫md** for `.md`, `.txt`, or `.textpack` in your file manager. The app registers common Markdown, text, TextPack, generic binary, and ZIP MIME types, then validates the real display name after receiving a file. Some unrelated binary or ZIP files may also list the app; unsupported extensions are rejected on receipt. The exact chooser UI depends on the file manager.
 
@@ -337,7 +337,7 @@ Tokens are displayed as “approximately N tokens.” This is a fast, model-inde
 ### Three Views
 
 - **WYSIWYG**: edit while seeing the formatted result.
-- **Source**: edit the Markdown text directly.
+- **Source**: edit the Markdown text directly at a uniform font size, with clearly visible markers such as `#`, `===`, and `**`. Headings retain their original syntax; `===` on the line below text also denotes a level-one heading.
 - **Reader**: display only the rendered document.
 
 WYSIWYG, Reader, and large-document lightweight preview share an Obsidian-inspired reading rhythm. Defaults remain 16px text, 1.5 line height, and a 1200px maximum content width. Reading Settings offers 14 / 16 / 18 / 20 / 24px text, 1.5 / 1.7 / 2 line height, and 1200 / 1600 / 2100px or full available width. Content always fits the available window width, and preferences are remembered.
