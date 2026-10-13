@@ -9,14 +9,14 @@
 - 保存或关闭时等待本地记录写入期间出现新编辑或异步粘贴，会保留当前文档并要求重新确认；重复关闭和失败重试保持一致。
 - 修复接近文件系统名称长度上限的文件保存失败；保留网页粘贴代码块中的连续空行、缩进与空格行。
 - 修复图片导出时 Markdown 代码围栏与原始 HTML 块的边界判断。
-- 本次发布 Windows v0.5.5 EXE 与校验文件；Android 继续使用 v0.5.2 APK，尚未包含本轮更新。
+- 本次发布 Windows v0.5.5 EXE、Android v0.5.5 / 5005 ARM64 APK 与校验文件。Android 沿用旧版签名，包含本轮查找更新及 v0.5.3–v0.5.4 的阅读位置、源码显示修复。
 
 - Entering a search term jumps to the first result and highlights every match, with a distinct current result. All three views and large documents are supported; highlights clear when Find is cleared or closed and refresh after edits or replacements.
 - The Find panel reserves space above the document so matches at the beginning stay visible on desktop and narrow screens.
 - New edits or completed asynchronous pastes while local records are flushed before leaving a document keep the current document open for confirmation. Repeated close requests and retries after failures remain consistent.
 - Fix saving files near the filesystem filename-length limit and preserve consecutive blank lines, indentation, and whitespace-only lines in pasted code blocks.
 - Correct Markdown code-fence and raw-HTML boundaries during image export.
-- This release ships the Windows v0.5.5 EXE and checksums. Android remains at v0.5.2 and does not include these updates.
+- This release ships the Windows v0.5.5 EXE, Android v0.5.5 / 5005 ARM64 APK, and checksums. Android retains the existing signing certificate and includes the new Find behavior plus the reading-position and source-display fixes from v0.5.3–v0.5.4.
 
 验证结果与平台范围见 [v0.5.5 发布说明](docs/releases/v0.5.5.md)。
 

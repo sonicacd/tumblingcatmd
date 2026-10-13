@@ -12,7 +12,7 @@ A free, open-source Markdown reader and editor for Windows and Android, with sin
 
 ![滚猫 md 的 Windows 所见即所得编辑界面 / Actual Windows WYSIWYG editor, shown in Chinese](https://tumblingcat.com/tumblingcat-windows-editor.png)
 
-- **轻便 / Portable** — Windows v0.5.5 EXE 免安装，依赖系统 WebView2；Android v0.5.2 ARM64 APK 约 10.63 MiB。
+- **轻便 / Portable** — Windows v0.5.5 EXE 免安装，依赖系统 WebView2；Android v0.5.5 ARM64 APK 约 10.64 MiB。
 - **图文一起带走 / Keep images with your notes** — TextPack 将 Markdown 与可访问的本地图片放进一个文件。Existing remote images keep their URLs.
 - **本地读写 / Local files** — 无需账号，原文档手动保存；本机恢复草稿提供额外恢复入口。No account required; save the original file manually.
 
@@ -62,7 +62,7 @@ Windows 版“更多”菜单提供两个入口：
 
 ### Android 版
 
-从 [v0.5.2 Release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2) 下载 `rollcat-md-android-arm64.apk`。本次 v0.5.5 更新 Windows EXE，Android 继续使用 v0.5.2 APK。
+从 [v0.5.5 Release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.5) 下载 `rollcat-md-android-arm64.apk`。Windows 和 Android 均已更新到 v0.5.5；Android 沿用旧版签名，可覆盖安装升级。
 
 安装后，可在文件管理器中对 `.md`、`.txt`、`.textpack` 选择“打开方式”→“滚猫md”。应用同时兼容常见 Markdown、文本、TextPack 及通用二进制/ZIP 类型声明，接收后按文件的真实名称检查支持的扩展名。因此部分其他二进制或 ZIP 文件也可能显示滚猫md候选，选择后会提示文件类型不支持。具体入口样式由文件管理器决定。
 
@@ -320,7 +320,7 @@ Registration points to the full path of the running EXE. Keep the portable EXE i
 
 ### Android
 
-Download `rollcat-md-android-arm64.apk` from the [v0.5.2 release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2). This v0.5.5 release updates the Windows EXE; Android continues to use the v0.5.2 APK.
+Download `rollcat-md-android-arm64.apk` from the [v0.5.5 release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.5). Both Windows and Android are now at v0.5.5. Android retains the existing signing certificate for in-place upgrades.
 
 After installation, choose **Open with → 滚猫md** for `.md`, `.txt`, or `.textpack` in your file manager. The app registers common Markdown, text, TextPack, generic binary, and ZIP MIME types, then validates the real display name after receiving a file. Some unrelated binary or ZIP files may also list the app; unsupported extensions are rejected on receipt. The exact chooser UI depends on the file manager.
 
