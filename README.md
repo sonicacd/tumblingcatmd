@@ -12,7 +12,7 @@ A free, open-source Markdown reader and editor for Windows and Android, with sin
 
 ![滚猫 md 的 Windows 所见即所得编辑界面 / Actual Windows WYSIWYG editor, shown in Chinese](https://tumblingcat.com/tumblingcat-windows-editor.png)
 
-- **轻便 / Portable** — Windows v0.5.4 EXE 免安装，依赖系统 WebView2；Android v0.5.2 ARM64 APK 约 10.63 MiB。
+- **轻便 / Portable** — Windows v0.5.5 EXE 免安装，依赖系统 WebView2；Android v0.5.2 ARM64 APK 约 10.63 MiB。
 - **图文一起带走 / Keep images with your notes** — TextPack 将 Markdown 与可访问的本地图片放进一个文件。Existing remote images keep their URLs.
 - **本地读写 / Local files** — 无需账号，原文档手动保存；本机恢复草稿提供额外恢复入口。No account required; save the original file manually.
 
@@ -29,7 +29,7 @@ A free, open-source Markdown reader and editor for Windows and Android, with sin
 | 排查 Markdown 图片丢失、路径或目录权限问题 | [Markdown 图片不显示怎么办](https://tumblingcat.com/guides/markdown-images-not-showing/) | [Fix missing Markdown images](https://tumblingcat.com/en/guides/markdown-images-not-showing/) |
 | 把 Markdown 正文导出成 PNG、分享长文图片 | [Markdown 转图片与分页导出](https://tumblingcat.com/guides/markdown-to-image/) | [Export Markdown to PNG images](https://tumblingcat.com/en/guides/markdown-to-image/) |
 
-[中文说明](#中文说明) · [English Guide](#english-guide) · [更新记录](CHANGELOG.md) · [v0.5.4 发布说明](docs/releases/v0.5.4.md)
+[中文说明](#中文说明) · [English Guide](#english-guide) · [更新记录](CHANGELOG.md) · [v0.5.5 发布说明](docs/releases/v0.5.5.md)
 
 ---
 
@@ -62,7 +62,7 @@ Windows 版“更多”菜单提供两个入口：
 
 ### Android 版
 
-从 [v0.5.2 Release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2) 下载 `rollcat-md-android-arm64.apk`。本次 v0.5.4 更新 Windows EXE，Android 继续使用 v0.5.2 APK。
+从 [v0.5.2 Release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2) 下载 `rollcat-md-android-arm64.apk`。本次 v0.5.5 更新 Windows EXE，Android 继续使用 v0.5.2 APK。
 
 安装后，可在文件管理器中对 `.md`、`.txt`、`.textpack` 选择“打开方式”→“滚猫md”。应用同时兼容常见 Markdown、文本、TextPack 及通用二进制/ZIP 类型声明，接收后按文件的真实名称检查支持的扩展名。因此部分其他二进制或 ZIP 文件也可能显示滚猫md候选，选择后会提示文件类型不支持。具体入口样式由文件管理器决定。
 
@@ -79,7 +79,7 @@ Android 版使用系统文件选择器，不申请整盘存储权限。从系统
 首次打开时会自动显示帮助，先介绍 Windows 的打开方式和默认 `.md` 程序设置，再说明编辑、阅读、TextPack、网页粘贴等常用功能。勾选“下次不再展示”并关闭帮助后，以后启动不再自动弹出；仍可通过“更多”→“使用帮助”手动打开。
 
 1. 点击“新建”创建文档，点击“打开”选择已有文件，或把支持的文件直接拖进窗口。“更多”→“最近打开”可以继续之前的文档。
-2. 在“所见即所得”“源码”“阅读”三种视图之间切换；点击“大纲”按章节导航，点击“查找”搜索和替换文字。
+2. 在“所见即所得”“源码”“阅读”三种视图之间切换；点击“大纲”按章节导航，点击“查找”搜索和替换文字。输入搜索词后自动跳到第一个结果，所有命中的原文都会高亮，当前结果使用更深的底色和下划线；清空搜索词或关闭查找后清除高亮。
 3. 从“阅读设置”调整字号、行距和正文宽度，从“主题”选择纯黑、纯白或护眼配色。
 4. 编辑完成后点击“保存”；需要保留原文件时使用“另存为”。未保存内容会自动写入本机恢复草稿，可在“更多”→“恢复草稿”找回。
 5. 使用“更多”→“导出全文图片”保存全文；选中文字后可选择“选中内容复制为图片”。
@@ -143,7 +143,7 @@ Android 版先从“更多”→“关联图片文件夹”打开系统目录选
 
 ### 粘贴网页图文
 
-在网页中选中包含文字和图片的内容并复制，然后粘贴到编辑区。应用会把剪贴板中的 HTML 转为 Markdown，保留主要内容顺序、标题、列表及基础文字样式，并尝试下载其中可访问的 HTTPS 图片。
+在网页中选中包含文字和图片的内容并复制，然后粘贴到编辑区。应用会把剪贴板中的 HTML 转为 Markdown，保留主要内容顺序、标题、列表及基础文字样式，并尝试下载其中可访问的 HTTPS 图片。网页代码块中的连续空行和缩进会保留。
 
 在 TextPack 中，成功下载的图片直接加入包内附件。空白且未保存的文档在成功包含网页图片后自动采用 TextPack；已有普通 Markdown 文档在原生版中使用文档旁的 `assets/` 附件目录。下载失败的图片保留可见的 Markdown 链接，方便稍后重新获取。
 
@@ -230,6 +230,7 @@ Windows 版也可以把支持的文件直接拖进程序窗口打开。从“更
 - 编辑停止约 1.5 秒后，软件会自动将完整未保存内容写入本机恢复草稿；持续输入时每约 10 秒检查并保存一次。大文档也保留完整正文，TextPack 草稿还包含包内附件。
 - 在“更多”→“恢复草稿”中找回内容。最多滚动保留 5 份恢复副本，同一份草稿会随编辑更新；超过数量时淘汰较早记录。这里提供有限的恢复副本，长期版本历史和重要文档备份仍需自行管理。
 - 新建、打开其他文件或关闭程序前，存在未保存内容时可以选择“保存并继续”“放弃更改”或“取消”。选择放弃后，已保留的恢复草稿仍可找回；原文件保持上次手动保存的内容。
+- 保存或关闭前等待本地记录写入时，若出现新编辑或异步粘贴完成，会保留当前文档，需再次确认后继续。
 - 成功保存当前完整内容后，对应恢复草稿会移除。草稿写入失败时界面会提示，请及时手动保存。
 - 原生版文件保存采用安全替换方式；写入失败时会尽量保留原文件，并尽量保留 UTF-8 BOM 和原文主要使用的换行格式。
 - 最近记录和恢复草稿使用本机 IndexedDB，设置和记录随本机 WebView 应用数据保存。清除应用数据、卸载或浏览器清理站点数据可能移除它们；仅复制 EXE 不会迁移这些数据。
@@ -319,7 +320,7 @@ Registration points to the full path of the running EXE. Keep the portable EXE i
 
 ### Android
 
-Download `rollcat-md-android-arm64.apk` from the [v0.5.2 release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2). This v0.5.4 release updates the Windows EXE; Android continues to use the v0.5.2 APK.
+Download `rollcat-md-android-arm64.apk` from the [v0.5.2 release](https://github.com/sonicacd/tumblingcatmd/releases/tag/v0.5.2). This v0.5.5 release updates the Windows EXE; Android continues to use the v0.5.2 APK.
 
 After installation, choose **Open with → 滚猫md** for `.md`, `.txt`, or `.textpack` in your file manager. The app registers common Markdown, text, TextPack, generic binary, and ZIP MIME types, then validates the real display name after receiving a file. Some unrelated binary or ZIP files may also list the app; unsupported extensions are rejected on receipt. The exact chooser UI depends on the file manager.
 
@@ -336,7 +337,7 @@ Local builds require Android SDK 36, the NDK, a JDK, and the Rust Android target
 Help opens automatically on first launch, starting with the Windows Open with and default `.md` actions, followed by editing, reading, TextPack, web pasting, and other common features. Check **Don't show next time** and close Help to stop automatic startup display. You can still open it manually through **More → Help**.
 
 1. Select **New**, choose **Open**, or drag a supported file onto the Windows app. Use **More → Recent Documents** to continue a previous document.
-2. Switch between **WYSIWYG**, **Source**, and **Reader**. Use **Outline** to navigate chapters and **Find** to search and replace text.
+2. Switch between **WYSIWYG**, **Source**, and **Reader**. Use **Outline** to navigate chapters and **Find** to search and replace text. Entering a search term automatically jumps to the first result and highlights all matches, with a stronger background and underline for the current result. Clearing the search or closing Find removes the highlights.
 3. Open **Reading Settings** to adjust font size, line height, and content width; choose Black, White, or Eye Comfort from Theme.
 4. Select **Save** after editing, or **Save As** to keep a separate file. Unsaved work is automatically copied to local recovery drafts, available from **More → Recovery Drafts**.
 5. Export the whole document as images from **More**, or select text and use **Copy Selection as Image**.
@@ -400,7 +401,7 @@ Other editors need TextPack support for direct editing. A ZIP tool can also extr
 
 ### Pasting Web Text and Images
 
-Copy a selection containing text and images from a web page, then paste it into the editor. The app converts clipboard HTML to Markdown, retaining the main content order, headings, lists, and basic text styling, and attempts to download accessible HTTPS images.
+Copy a selection containing text and images from a web page, then paste it into the editor. The app converts clipboard HTML to Markdown, retaining the main content order, headings, lists, and basic text styling, and attempts to download accessible HTTPS images. Consecutive blank lines and indentation inside preformatted code blocks are preserved.
 
 In a TextPack, downloaded images become embedded attachments. A blank, unsaved document switches to TextPack when web images are successfully included. Existing ordinary Markdown documents use the adjacent `assets/` folder in the native app. Failed image downloads remain as visible Markdown links for later retrieval.
 
@@ -487,6 +488,7 @@ Ordinary text files and Markdown inside a TextPack must contain valid **UTF-8** 
 - After approximately 1.5 seconds without an edit, the app writes the complete unsaved content to a local recovery draft. During continuous editing it checks and saves approximately every 10 seconds. Large-document drafts keep their full text; TextPack drafts also retain package attachments.
 - Open **More → Recovery Drafts** to recover work. Up to five recovery copies are retained, with each active draft updated as you edit. Older entries are removed when the limit is exceeded. Keep separate backups for long-term version history and important documents.
 - Before creating or opening another document or closing the app, choose **Save and Continue**, **Discard Changes**, or **Cancel** when changes are unsaved. Discarding leaves a retained draft available for recovery and leaves the document file at its last manually saved state.
+- If new edits or a pending paste arrive while local records are being written before leaving, the current document stays open for you to review and confirm again.
 - Saving the complete current content successfully removes its recovery draft. The interface reports draft write failures so you can save the document manually.
 - Native file saves use a safe replacement process that attempts to preserve the original on failure. UTF-8 BOM and the dominant line-ending style are preserved where possible.
 - Recent records and recovery drafts use local IndexedDB. They and reading preferences live in this device's WebView application data. Clearing application or browser site data, or uninstalling, can remove them. Copying the EXE does not transfer these records.

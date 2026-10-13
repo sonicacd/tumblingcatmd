@@ -80,6 +80,14 @@ test('downloads text and images together, preserves order, and stores duplicates
   assert.equal(result.failedImages, 0);
 });
 
+test('preserves blank and whitespace-only lines in pasted code blocks', () => {
+  const code = 'before\n\n\n  \n\t\nafter';
+  const expected = `\`\`\`\n${code}\n\`\`\``;
+  assert.equal(webPasteDomToMarkdown(root(p('前文'), element('pre', {}, code), p('后文'))), `前文\n\n${expected}\n\n后文`);
+  assert.equal(webPasteDomToMarkdown(root(element('blockquote', {}, element('pre', {}, code)))), expected.split('\n').map((line) => `> ${line}`).join('\n'));
+  assert.equal(webPasteDomToMarkdown(root(element('ul', {}, element('li', {}, element('pre', {}, code))))), expected.split('\n').map((line, index) => `${index ? '  ' : '- '}${line}`).join('\n'));
+});
+
 test('stores downloaded images sequentially in clipboard order despite out-of-order fetching', async () => {
   let active = 0;
   let maximum = 0;

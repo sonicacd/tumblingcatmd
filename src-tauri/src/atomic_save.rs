@@ -1,5 +1,4 @@
 use std::{
-    ffi::OsString,
     fs::{self, File, OpenOptions},
     io::{self, Write},
     path::{Path, PathBuf},
@@ -56,15 +55,11 @@ fn create_temporary_file(target: &Path) -> io::Result<(PathBuf, File)> {
     let parent = target
         .parent()
         .expect("target was validated before this call");
-    let file_name = target
-        .file_name()
-        .expect("target was validated before this call");
-
     for _ in 0..MAX_TEMP_ATTEMPTS {
         let id = NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed);
-        let mut temporary_name = OsString::from(".");
-        temporary_name.push(file_name);
-        temporary_name.push(format!(".{}.{}.tmp", process::id(), id));
+        // Keep this independent of the target name so a valid long filename
+        // does not exceed the filesystem's component limit after adding suffixes.
+        let temporary_name = format!(".rollcat-md-{}-{id}.tmp", process::id());
         let temporary_path = parent.join(temporary_name);
 
         match OpenOptions::new()
@@ -306,6 +301,22 @@ mod tests {
             fs::read_dir(&directory.0).expect("list directory").count(),
             1,
             "temporary and backup files should be cleaned up"
+        );
+    }
+
+    #[test]
+    fn saves_files_with_names_at_the_filesystem_limit() {
+        let directory = TestDirectory::new();
+        let directory_path = fs::canonicalize(&directory.0).expect("canonical test directory");
+        let target = directory_path.join(format!("{}.md", "a".repeat(252)));
+        fs::write(&target, b"original").expect("create file with a 255-character name");
+
+        write_atomic(&target, b"replacement").expect("save file with a long name");
+
+        assert_eq!(fs::read(&target).expect("read saved file"), b"replacement");
+        assert_eq!(
+            fs::read_dir(&directory.0).expect("list directory").count(),
+            1
         );
     }
 

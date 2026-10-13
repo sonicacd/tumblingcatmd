@@ -251,7 +251,15 @@ export function createWorkspaceController(api, options = {}) {
     $('saveAndContinueButton').onclick = action(async () => {
       await api.save();
       if (api.context().documentId !== context.documentId) { finish(false); return; }
-      if (!api.context().isDirty) { await flush(); finish(true); }
+      if (!api.context().isDirty) {
+        await flush();
+        const current = api.context();
+        if (current.documentId !== context.documentId) { finish(false); return; }
+        if (current.isDirty) {
+          api.status('文档出现新更改，请确认后再继续。'); return;
+        }
+        finish(true);
+      }
     });
     $('discardChangesButton').onclick = action(async () => {
       const revision = api.context().revision;
@@ -264,7 +272,8 @@ export function createWorkspaceController(api, options = {}) {
     });
     $('cancelDiscardButton').onclick = () => { if (!busy) finish(false); };
     dialog.oncancel = (event) => { event.preventDefault(); if (!busy) finish(false); };
-    dialog.onclose = () => { if (!settled) finish(false); };
+    // A previous close event may arrive after a new prompt has already opened.
+    dialog.onclose = () => { if (!settled && !dialog.open) finish(false); };
     try { showDialog('confirmSaveDialog'); $('saveAndContinueButton').focus(); }
     catch (error) { reportStorageError(error); finish(false); }
     return result;

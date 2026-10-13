@@ -16,6 +16,23 @@ function destination(value) {
 }
 function normalizeSpace(value) { return String(value).replace(/[\t\r\n ]+/g, ' '); }
 
+function joinMarkdown(parts) {
+  const result = [];
+  let spacing = '';
+  for (const part of parts) {
+    const start = part.search(/[^ \t\n]/);
+    if (start < 0) { spacing += part; continue; }
+    const trailing = /[ \t\n]*$/.exec(part)[0];
+    spacing += part.slice(0, start);
+    // Normalize only the gaps between DOM children. Newlines inside a PRE
+    // child belong to its code, including blank and whitespace-only lines.
+    result.push(spacing.replace(/\n[ \t]+\n/g, '\n\n').replace(/\n{3,}/g, '\n\n'));
+    result.push(part.slice(start, part.length - trailing.length));
+    spacing = trailing;
+  }
+  return result.join('') + spacing;
+}
+
 function resolveUrl(source, baseUrl, { image = false } = {}) {
   if (typeof source !== 'string' || !source.trim()) return '';
   const value = source.trim();
@@ -34,7 +51,7 @@ function failedImageMarkdown(alternative, source) {
 
 /** Converts an inert, sanitized DOM tree. No clipboard HTML is inserted into the editor. */
 export function webPasteDomToMarkdown(root, { imageMarkdown = new Map(), baseUrl = '' } = {}) {
-  const children = (node) => Array.from(node.childNodes || []).map(visit).join('');
+  const children = (node) => joinMarkdown(Array.from(node.childNodes || []).map(visit));
   const block = (text) => `\n\n${text.trim()}\n\n`;
   const wrap = (text, delimiter) => text.trim()
     ? `${/^\s/.test(text) ? ' ' : ''}${delimiter}${text.trim()}${delimiter}${/\s$/.test(text) ? ' ' : ''}` : text;
@@ -89,7 +106,7 @@ export function webPasteDomToMarkdown(root, { imageMarkdown = new Map(), baseUrl
     if (tag === 'BLOCKQUOTE') return block(text.trim().split('\n').map((line) => `> ${line}`).join('\n'));
     return BLOCK_TAGS.has(tag) ? block(text) : text;
   }
-  return visit(root).replace(/\n[ \t]+\n/g, '\n\n').replace(/\n{3,}/g, '\n\n').trim();
+  return visit(root).trim();
 }
 
 function getImageSource(image, baseUrl) {

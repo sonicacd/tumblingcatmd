@@ -1,5 +1,27 @@
 # 更新记录 / Changelog
 
+## 0.5.5
+
+### 查找定位、高亮与文档可靠性 / Find Navigation, Highlights, and Document Reliability
+
+- 输入搜索词后自动跳到第一个结果，高亮全部命中的原文，并突出当前结果。三种视图与大文档均支持；清空或关闭查找时清除高亮，编辑和替换后同步更新。
+- 查找面板在正文上方单独占位，避免遮挡文首命中，兼顾桌面和窄屏布局。
+- 保存或关闭时等待本地记录写入期间出现新编辑或异步粘贴，会保留当前文档并要求重新确认；重复关闭和失败重试保持一致。
+- 修复接近文件系统名称长度上限的文件保存失败；保留网页粘贴代码块中的连续空行、缩进与空格行。
+- 修复图片导出时 Markdown 代码围栏与原始 HTML 块的边界判断。
+- 本次发布 Windows v0.5.5 EXE 与校验文件；Android 继续使用 v0.5.2 APK，尚未包含本轮更新。
+
+- Entering a search term jumps to the first result and highlights every match, with a distinct current result. All three views and large documents are supported; highlights clear when Find is cleared or closed and refresh after edits or replacements.
+- The Find panel reserves space above the document so matches at the beginning stay visible on desktop and narrow screens.
+- New edits or completed asynchronous pastes while local records are flushed before leaving a document keep the current document open for confirmation. Repeated close requests and retries after failures remain consistent.
+- Fix saving files near the filesystem filename-length limit and preserve consecutive blank lines, indentation, and whitespace-only lines in pasted code blocks.
+- Correct Markdown code-fence and raw-HTML boundaries during image export.
+- This release ships the Windows v0.5.5 EXE and checksums. Android remains at v0.5.2 and does not include these updates.
+
+验证结果与平台范围见 [v0.5.5 发布说明](docs/releases/v0.5.5.md)。
+
+See the [v0.5.5 release notes](docs/releases/v0.5.5.md) for validation and platform scope.
+
 ## 0.5.4
 
 ### 源码标题与语法标记 / Source Headings and Syntax Markers

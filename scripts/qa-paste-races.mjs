@@ -16,12 +16,12 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true }).cat
 const checks = [], errors = [], alerts = [];
 let activePage;
 
-async function fixture(name = 'original.textpack', content = emptyPack) {
+async function fixture(name = 'original.textpack', content = emptyPack, { native = false } = {}) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage(); activePage = page;
   page.on('pageerror', error => errors.push(error.stack));
   page.on('dialog', async dialog => { alerts.push(dialog.message()); await dialog.dismiss(); });
-  await page.addInitScript(({ name, bytes }) => {
+  await page.addInitScript(({ name, bytes, native }) => {
     localStorage.setItem('rollcat-md.hide-startup-help', 'true');
     const files = new Map([[name, new Uint8Array(bytes)]]), handles = new Map();
     window.__qa = { files, open: name, save: name, saves: 0 };
@@ -34,12 +34,60 @@ async function fixture(name = 'original.textpack', content = emptyPack) {
     };
     window.showOpenFilePicker = async () => [handle(window.__qa.open)];
     window.showSaveFilePicker = async () => handle(window.__qa.save);
-  }, { name, bytes: Array.from(content) });
+    if (!native) return;
+    const qa = window.__qa;
+    Object.assign(qa, { nativeCalls: [], unexpected: [], remembers: 0, destroys: 0, closeTasks: [] });
+    let callbackId = 0;
+    const callbacks = new Map(), listeners = new Map();
+    window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener() {} };
+    window.__TAURI_INTERNALS__ = {
+      metadata: { currentWindow: { label: 'main' }, currentWebview: { label: 'main' } },
+      transformCallback(callback) { const id = ++callbackId; callbacks.set(id, callback); return id; },
+      unregisterCallback(id) { callbacks.delete(id); },
+      async invoke(command, args) {
+        qa.nativeCalls.push({ command, args });
+        if (command === 'plugin:event|listen') { listeners.set(args.event, callbacks.get(args.handler)); return ++callbackId; }
+        if (command === 'get_initial_file') return null;
+        if (command === 'take_opened_urls') return [];
+        if (command === 'plugin:dialog|open') return qa.open;
+        if (command === 'plugin:fs|read_file') return Array.from(files.get(args.path));
+        if (command === 'remember_recent_file') {
+          qa.remembers++;
+          if (qa.gateNextRemember) {
+            qa.gateNextRemember = false;
+            await new Promise(resolve => { qa.releaseRemember = () => { qa.releaseRemember = null; resolve(); }; });
+          }
+          return;
+        }
+        if (command === 'plugin:window|destroy') {
+          if (qa.failDestroy) { qa.failDestroy = false; throw new Error('模拟关闭失败'); }
+          qa.destroys++; return;
+        }
+        if (['plugin:event|unlisten', 'plugin:window|set_title'].includes(command)) return;
+        qa.unexpected.push(command);
+        throw new Error(`unexpected native call: ${command}`);
+      }
+    };
+    qa.startClose = () => {
+      const id = qa.closeTasks.length;
+      qa.closeTasks.push(listeners.get('tauri://close-requested')({ event: 'tauri://close-requested', id: 0, payload: null }));
+      return id;
+    };
+    const originalPut = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (this.name === 'drafts' && qa.failDraftWrite) throw new DOMException('模拟磁盘空间不足', 'QuotaExceededError');
+      return originalPut.apply(this, args);
+    };
+  }, { name, bytes: Array.from(content), native });
   await page.goto(appUrl);
   await page.locator('.toastui-editor-ww-container [contenteditable="true"]').waitFor({ state: 'visible' });
   await page.evaluate(() => Promise.all([import('/src/web-paste.js'), import('/src/local-images.js')]));
   await page.locator('#openButton').click();
   await page.waitForFunction(name => document.title.includes(name), name);
+  if (native) {
+    await page.waitForFunction(() => window.__qa.remembers > 0);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  }
   return { page, context };
 }
 async function menu(page, selector) {
@@ -80,8 +128,63 @@ async function save(page, name, saveAs = false) {
   await page.waitForFunction(count => window.__qa.saves > count, count);
   return new Uint8Array(await page.evaluate(name => Array.from(window.__qa.files.get(name)), name));
 }
+async function editEnd(page, text) {
+  await page.locator('.toastui-editor-ww-container [contenteditable="true"]').click();
+  await page.keyboard.press('Control+End'); await page.keyboard.insertText(text);
+}
+async function readDrafts(page) {
+  return page.evaluate(async () => (await import('/src/document-history.js')).createDocumentHistory().listDrafts());
+}
 
 try {
+  {
+    const { page, context } = await fixture('close.md', new TextEncoder().encode(plain), { native: true });
+    const closeId = await page.evaluate(() => { window.__qa.gateNextRemember = true; return window.__qa.startClose(); });
+    await page.waitForFunction(() => window.__qa.releaseRemember !== null && typeof window.__qa.releaseRemember === 'function');
+    // Repeated native close events must share the original in-flight decision.
+    const repeatedId = await page.evaluate(() => window.__qa.startClose());
+    await editEnd(page, 'KEEPDURINGCLOSE');
+    await page.evaluate(() => window.__qa.releaseRemember());
+    await page.evaluate(ids => Promise.all(ids.map(id => window.__qa.closeTasks[id])), [closeId, repeatedId]);
+    assert.equal(await page.evaluate(() => window.__qa.destroys), 0);
+    assert.match(await source(page), /KEEPDURINGCLOSE/);
+    assert.match(await page.title(), /\*/);
+    checks.push('native close waits for records, rejects new edits and repeated close events preserve the current document');
+    const retryId = await page.evaluate(() => window.__qa.startClose());
+    await page.locator('#confirmSaveDialog').waitFor({ state: 'visible' });
+    await page.locator('#discardChangesButton').click();
+    await page.evaluate(id => window.__qa.closeTasks[id], retryId);
+    assert.equal(await page.evaluate(() => window.__qa.destroys), 1);
+    assert.ok((await readDrafts(page)).some(record => record.content.includes('KEEPDURINGCLOSE')));
+    assert.deepEqual(await page.evaluate(() => window.__qa.unexpected), []);
+    checks.push('retrying native close with Discard writes a recoverable draft and closes once');
+    await context.close();
+  }
+  {
+    const { page, context } = await fixture('close-errors.md', new TextEncoder().encode(plain), { native: true });
+    await editEnd(page, 'KEEPONERROR');
+    await page.evaluate(() => { window.__qa.failDraftWrite = true; });
+    const closeId = await page.evaluate(() => window.__qa.startClose());
+    await page.locator('#confirmSaveDialog').waitFor({ state: 'visible' });
+    await page.locator('#discardChangesButton').click();
+    await page.waitForFunction(() => document.querySelector('#statusText').textContent.includes('当前文档已保留'));
+    assert.equal(await page.evaluate(() => window.__qa.destroys), 0);
+    assert.equal(await page.locator('#confirmSaveDialog').isVisible(), true);
+    await page.evaluate(() => { window.__qa.failDraftWrite = false; window.__qa.failDestroy = true; });
+    await page.locator('#discardChangesButton').click();
+    await page.evaluate(id => window.__qa.closeTasks[id], closeId);
+    assert.equal(await page.evaluate(() => window.__qa.destroys), 0);
+    assert.match(await page.locator('#statusText').innerText(), /关闭失败/);
+    assert.ok((await readDrafts(page)).some(record => record.content.includes('KEEPONERROR')));
+    const retryId = await page.evaluate(() => window.__qa.startClose());
+    await page.locator('#confirmSaveDialog').waitFor({ state: 'visible' });
+    await page.locator('#discardChangesButton').click();
+    await page.evaluate(id => window.__qa.closeTasks[id], retryId);
+    assert.equal(await page.evaluate(() => window.__qa.destroys), 1);
+    assert.deepEqual(await page.evaluate(() => window.__qa.unexpected), []);
+    checks.push('draft write and native destroy failures preserve the document and allow another close attempt');
+    await context.close();
+  }
   {
     const { page, context } = await fixture();
     const release = await gatePaste(page, 'TYPING');

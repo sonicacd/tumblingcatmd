@@ -73,9 +73,11 @@ function fenceForLine(line, currentFence) {
   }
   const marker = match[1];
   if (!currentFence) {
+    if (marker[0] === '`' && line.slice(match[0].length).includes('`')) return null;
     return { character: marker[0], length: marker.length, opening: line };
   }
-  if (marker[0] === currentFence.character && marker.length >= currentFence.length) {
+  if (marker[0] === currentFence.character && marker.length >= currentFence.length
+    && /^[ \t]*$/.test(line.slice(match[0].length))) {
     return null;
   }
   return currentFence;
@@ -175,8 +177,10 @@ export async function* iterateMarkdownExportChunks(lineSource, {
 
     const previousFence = fence;
     const previousRawHtml = rawHtml;
-    fence = fenceForLine(line, fence);
-    rawHtml = rawHtmlStateForLine(line, rawHtml);
+    // Code and raw HTML are separate Markdown blocks. Literal tags in code
+    // and fence markers in HTML must not change the other block's state.
+    if (!rawHtml) fence = fenceForLine(line, fence);
+    if (!previousFence && !fence) rawHtml = rawHtmlStateForLine(line, rawHtml);
     if (previousRawHtml || rawHtml || startsRawHtml) {
       rawHtmlCharacters += line.length + 1;
       if (rawHtmlCharacters > maximumBlockCharacters) {

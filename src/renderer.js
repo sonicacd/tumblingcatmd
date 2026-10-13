@@ -64,12 +64,22 @@ import {
   findMatchIndex,
   findTextMatches,
   mapVisibleFindSnapshotToSource,
-  mappedTextNodeId,
   mappedTextOffsetAtPosition,
   mappedTextRange,
   offsetToMarkdownPosition,
   replaceAllText
 } from './find-replace.js';
+import {
+  findHighlightPlugin,
+  largeDocumentFindHighlights,
+  setEditorFindHighlights,
+  setLargeDocumentFindHighlights
+} from './find-highlights.js';
+import {
+  clearVisibleFindHighlights,
+  scrollFindRangeIntoView,
+  setVisibleFindHighlights
+} from './visible-find-highlights.js';
 import { registerNativeFileDrop } from './file-drop.js';
 import { isTextPackFile, createTextPack, decodeTextPack, encodeTextPack, readTextPackImage, addTextPackImage } from './textpack.js';
 import { importMarkdownToTextPack } from './textpack-import.js';
@@ -278,6 +288,7 @@ const state = {
 
 let workspaceController = null;
 let allowNativeClose = false;
+let nativeClosePending = false;
 let imageHydrationTimer;
 let imageHydrationAbort;
 let webPasteAbort;
@@ -289,8 +300,11 @@ const findReplaceState = {
   anchorOffset: 0,
   documentRevision: -1,
   mode: null,
-  snapshot: null
+  snapshot: null,
+  highlightRanges: [],
+  highlightIndex: -1
 };
+let findRefreshTimer = null;
 
 function sanitizeMarkdownHTML(content) {
   return DOMPurify.sanitize(content, {
@@ -368,6 +382,7 @@ const largeFileEditorExtensions = [
   history(),
   drawSelection(),
   search({ top: true }),
+  largeDocumentFindHighlights,
   keymap.of([...defaultKeymap, ...historyKeymap]),
   markdown({
     base: markdownLanguage,
@@ -550,7 +565,7 @@ const editor = new Editor({
   usageStatistics: false,
   customHTMLSanitizer: sanitizeMarkdownHTML,
   hideModeSwitch: true,
-  plugins: [calloutEditorPlugin],
+  plugins: [calloutEditorPlugin, findHighlightPlugin],
   toolbarItems: [
     ['heading', 'bold', 'italic', 'strike'],
     ['hr', 'quote'],
@@ -1507,6 +1522,7 @@ function noteDocumentChanged(documentByteSize = null) {
   scheduleCountsUpdate();
   workspaceController?.changed();
   scheduleImageHydration();
+  scheduleFindRefresh();
 }
 
 function updateSavingState() {
@@ -1991,9 +2007,7 @@ function isFindReplaceOpen() {
   return !findReplaceElements.panel.hidden;
 }
 
-function createWysiwygFindSnapshot() {
-  const documentNode = editor.wwEditor?.view?.state?.doc;
-
+function createWysiwygFindSnapshot(documentNode = editor.wwEditor?.view?.state?.doc) {
   if (!documentNode?.descendants) {
     return { kind: 'wysiwyg-raw', text: getCurrentMarkdown() };
   }
@@ -2183,6 +2197,10 @@ function createVisibleFindSnapshot(
     }
 
     const textNode = currentNode;
+    if (textNode.parentElement?.closest('button, [aria-hidden="true"], .editor-callout-marker-hidden')) {
+      currentNode = walker.nextNode();
+      continue;
+    }
     if (
       directNodeText &&
       textNode.parentElement?.closest('[data-nodeid]') !== root
@@ -2265,42 +2283,57 @@ function clearVisibleFindSelection(root) {
   }
 }
 
-function selectVisibleFindMatch(root, query, activeIndex, options) {
-  const snapshot = createVisibleFindSnapshot(root, options);
-  const matches = findTextMatches(snapshot.text, query);
-
-  if (!matches.length) {
-    clearVisibleFindSelection(root);
-    return;
+function updateFindHighlights() {
+  const { snapshot, matches, activeIndex } = findReplaceState;
+  clearVisibleFindHighlights(viewerElement);
+  if (snapshot?.kind === 'large') {
+    largeFileEditor.dispatch({
+      effects: setLargeDocumentFindHighlights.of({ matches, activeIndex })
+    });
+    return null;
   }
-
-  const match = matches[activeIndex % matches.length];
-  let first = match.from;
-  let last = match.to - 1;
-
-  while (first <= last && !snapshot.spans[first]?.node) {
-    first += 1;
+  if (snapshot?.kind.startsWith('reader')) {
+    if (!matches.length) return null;
+    const visible = createVisibleFindSnapshot(viewerElement);
+    const visibleMatches = findTextMatches(visible.text, findReplaceState.query);
+    return setVisibleFindHighlights(
+      viewerElement, visible, visibleMatches,
+      snapshot.kind === 'reader-source' ? activeIndex % visibleMatches.length : activeIndex
+    );
   }
-  while (last >= first && !snapshot.spans[last]?.node) {
-    last -= 1;
-  }
+  const view = state.mode === 'markdown' ? editor.mdEditor.view : editor.wwEditor.view;
+  // Multiline queries retain source offsets for replacement. Rendered blocks
+  // can collapse their separators; keep the existing visible-result wrapping.
+  findReplaceState.highlightIndex = snapshot.kind === 'wysiwyg' || snapshot.kind === 'markdown'
+    ? activeIndex : activeIndex % findReplaceState.highlightRanges.length;
+  setEditorFindHighlights(view, findReplaceState.highlightRanges, findReplaceState.highlightIndex);
+  return null;
+}
 
-  if (first <= last) {
-    const firstSpan = snapshot.spans[first];
-    const lastSpan = snapshot.spans[last];
-    const range = document.createRange();
-    range.setStart(firstSpan.node, firstSpan.from);
-    range.setEnd(lastSpan.node, lastSpan.to);
+function prepareEditorFindHighlights() {
+  const { snapshot, matches } = findReplaceState;
+  if (!matches.length || snapshot.kind === 'large' || snapshot.kind.startsWith('reader')) return [];
+  const mapped = snapshot.kind === 'wysiwyg' ? snapshot : createWysiwygFindSnapshot(
+    state.mode === 'markdown' ? editor.mdEditor.view.state.doc : editor.wwEditor.view.state.doc
+  );
+  const visibleMatches = snapshot.kind === 'markdown' || snapshot.kind === 'wysiwyg'
+    ? matches : findTextMatches(mapped.text, findReplaceState.query);
+  return visibleMatches.map((match) => {
+    const range = mappedTextRange(mapped.spans, match.from, match.to);
+    return range ? { from: range[0], to: range[1] } : null;
+  });
+}
 
-    const selection = window.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-    firstSpan.node.parentElement?.scrollIntoView({ block: 'center' });
-    return;
-  }
-
-  const separator = snapshot.spans[match.from];
-  separator?.afterNode?.parentElement?.scrollIntoView({ block: 'center' });
+function scheduleFindRefresh() {
+  window.clearTimeout(findRefreshTimer);
+  if (!isFindReplaceOpen()) return;
+  findRefreshTimer = window.setTimeout(() => {
+    if (!isFindReplaceOpen()) return;
+    refreshFindMatches({
+      anchorOffset: findReplaceState.matches[findReplaceState.activeIndex]?.from ?? 0,
+      navigate: false
+    });
+  }, 150);
 }
 
 function renderFindReplaceState() {
@@ -2323,87 +2356,51 @@ function renderFindReplaceState() {
   findReplaceElements.replaceAllButton.disabled = !canReplaceAll;
 }
 
-function selectFindMatch() {
+function selectFindMatch({ navigate = true } = {}) {
   const match = findReplaceState.matches[findReplaceState.activeIndex];
   const snapshot = findReplaceState.snapshot;
-
   renderFindReplaceState();
-  if (!match) {
-    if (snapshot?.kind?.startsWith('reader')) {
-      clearVisibleFindSelection(viewerElement);
-    }
-    return;
-  }
+  const visibleRange = updateFindHighlights();
+  if (!match || !navigate) return;
 
   if (snapshot.kind === 'large') {
     largeFileEditor.dispatch({
       selection: { anchor: match.from, head: match.to },
-      scrollIntoView: true
+      effects: EditorView.scrollIntoView(match.from, { y: 'center' })
     });
     return;
   }
-
-  if (snapshot.kind === 'wysiwyg') {
-    const range = mappedTextRange(snapshot.spans, match.from, match.to);
-
-    if (range) {
-      editor.setSelection(range[0], range[1]);
-    }
+  if (snapshot.kind.startsWith('reader')) {
+    scrollFindRangeIntoView(visibleRange, readerPanel);
     return;
   }
 
-  if (
-    snapshot.kind === 'reader' ||
-    snapshot.kind === 'reader-readonly' ||
-    snapshot.kind === 'reader-source' ||
-    snapshot.kind === 'wysiwyg-raw' ||
-    snapshot.kind === 'wysiwyg-source'
-  ) {
-    if (snapshot.kind === 'reader') {
-      const nodeId = mappedTextNodeId(snapshot.spans, match.from, match.to);
-      const anchors = nodeId === null || nodeId === undefined
-        ? []
-        : viewerElement.querySelectorAll(`[data-nodeid="${nodeId}"]`);
-      const anchor = anchors.length === 1 ? anchors[0] : null;
-
-      if (anchor) {
-        const anchorMatchIndex = findReplaceState.matches
-          .slice(0, findReplaceState.activeIndex)
-          .filter((candidate) => (
-            mappedTextNodeId(snapshot.spans, candidate.from, candidate.to) === nodeId
-          ))
-          .length;
-        selectVisibleFindMatch(
-          anchor,
-          findReplaceElements.findInput.value,
-          anchorMatchIndex,
-          { directNodeText: true }
-        );
-        return;
-      }
-    }
-
-    selectVisibleFindMatch(
-      snapshot.kind.startsWith('reader')
-        ? viewerElement
-        : (editorElement.querySelector('.toastui-editor-ww-container') || editorElement),
-      findReplaceElements.findInput.value,
-      findReplaceState.activeIndex
+  const view = state.mode === 'markdown' ? editor.mdEditor.view : editor.wwEditor.view;
+  const range = findReplaceState.highlightRanges[findReplaceState.highlightIndex];
+  if (!range) return;
+  if (snapshot.kind === 'markdown') {
+    editor.setSelection(
+      offsetToMarkdownPosition(snapshot.text, match.from),
+      offsetToMarkdownPosition(snapshot.text, match.to)
     );
-    return;
+  } else {
+    editor.setSelection(range.from, range.to);
   }
-
-  editor.setSelection(
-    offsetToMarkdownPosition(snapshot.text, match.from),
-    offsetToMarkdownPosition(snapshot.text, match.to)
-  );
+  const start = view.domAtPos(range.from, 1);
+  const end = view.domAtPos(range.to, -1);
+  const domRange = document.createRange();
+  domRange.setStart(start.node, start.offset);
+  domRange.setEnd(end.node, end.offset);
+  scrollFindRangeIntoView(domRange, view.dom);
 }
 
 function refreshFindMatches({
   anchorOffset = findReplaceState.anchorOffset,
   direction = 1,
+  navigate = true,
   snapshot = getFindSearchSnapshot(findReplaceElements.findInput.value)
 } = {}) {
+  window.clearTimeout(findRefreshTimer);
   const query = findReplaceElements.findInput.value;
 
   findReplaceState.query = query;
@@ -2423,7 +2420,8 @@ function refreshFindMatches({
     direction
   );
   findReplaceState.documentRevision = state.revision;
-  selectFindMatch();
+  findReplaceState.highlightRanges = prepareEditorFindHighlights();
+  selectFindMatch({ navigate });
 }
 
 function ensureCurrentFindMatches() {
@@ -2435,7 +2433,7 @@ function ensureCurrentFindMatches() {
     findReplaceState.mode !== state.mode
   ) {
     const snapshot = getFindSearchSnapshot(query);
-    findReplaceState.anchorOffset = getFindCursorOffset(snapshot);
+    findReplaceState.anchorOffset = query !== findReplaceState.query ? 0 : getFindCursorOffset(snapshot);
     refreshFindMatches({ snapshot });
   }
 }
@@ -2684,7 +2682,7 @@ function openFindReplace() {
       findReplaceElements.findInput.value = selectedText;
     }
     const snapshot = getFindSearchSnapshot(findReplaceElements.findInput.value);
-    findReplaceState.anchorOffset = getFindCursorOffset(snapshot);
+    findReplaceState.anchorOffset = 0;
     refreshFindMatches({ snapshot });
   }
 
@@ -2700,12 +2698,19 @@ function closeFindReplace({ restoreFocus = true } = {}) {
   }
 
   findReplaceElements.panel.hidden = true;
+  window.clearTimeout(findRefreshTimer);
+  clearVisibleFindHighlights(viewerElement);
+  setEditorFindHighlights(editor.mdEditor.view);
+  setEditorFindHighlights(editor.wwEditor.view);
+  largeFileEditor.dispatch({ effects: setLargeDocumentFindHighlights.of({ matches: [], activeIndex: -1 }) });
   clearVisibleFindSelection(viewerElement);
   clearVisibleFindSelection(editorElement);
   findReplaceState.matches = [];
   findReplaceState.activeIndex = -1;
   findReplaceState.mode = null;
   findReplaceState.snapshot = null;
+  findReplaceState.highlightRanges = [];
+  findReplaceState.highlightIndex = -1;
   renderFindReplaceState();
 
   if (restoreFocus) {
@@ -2982,7 +2987,8 @@ findReplaceElements.panel.addEventListener('keydown', (event) => {
   }
 });
 findReplaceElements.findInput.addEventListener('input', () => {
-  refreshFindMatches();
+  findReplaceState.anchorOffset = 0;
+  refreshFindMatches({ anchorOffset: 0 });
 });
 findReplaceElements.previousButton.addEventListener('click', () => moveFindMatch(-1));
 findReplaceElements.replaceButton.addEventListener('click', () => {
@@ -3469,14 +3475,22 @@ if (document.documentElement.classList.contains('android-runtime')) {
 }
 if (isTauriRuntime()) {
   void getCurrentWindow().onCloseRequested(async (event) => {
-    if (allowNativeClose) return;
     event.preventDefault();
+    if (allowNativeClose || nativeClosePending) return;
+    nativeClosePending = true;
     try {
       if (await confirmDiscardChanges()) {
-        await workspaceController.flush(); allowNativeClose = true;
+        const snapshot = { documentId: state.documentId, revision: state.revision };
+        await workspaceController.flush();
+        if (!matchesDocumentRevision(snapshot, state)) {
+          setStatus('关闭期间文档已变化，已取消关闭，请确认后重试。');
+          return;
+        }
+        allowNativeClose = true;
         await getCurrentWindow().destroy();
       }
     } catch (error) { allowNativeClose = false; setStatus(`关闭失败：${error.message || error}`); }
+    finally { nativeClosePending = false; }
   });
 }
 

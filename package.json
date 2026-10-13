@@ -1,6 +1,6 @@
 {
   "name": "rollcat-md",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "rollcat-md — a lightweight Markdown reader and editor for Windows and Android.",
   "author": "sonicacd",
   "license": "Apache-2.0",
@@ -32,7 +32,8 @@
     "test:paste-races": "node scripts/qa-paste-races.mjs",
     "test:windows": "node scripts/qa-windows-integration.mjs",
     "test:help": "node scripts/qa-startup-help.mjs",
-    "test:position": "node scripts/qa-view-position.mjs"
+    "test:position": "node scripts/qa-view-position.mjs",
+    "test:find": "node scripts/qa-find-highlights.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",

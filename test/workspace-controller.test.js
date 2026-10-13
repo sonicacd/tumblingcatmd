@@ -234,6 +234,22 @@ test('a cancelled save stays in the prompt and cancellation leaves the document 
   assert.equal(f.state.context.isDirty, true);
 });
 
+test('a delayed close event from the previous prompt does not dismiss a reopened prompt', async () => {
+  const f = fixture({ dirty: true });
+  const dialog = f.$('confirmSaveDialog');
+  // Browsers dispatch close asynchronously, potentially after showModal runs again.
+  dialog.close = () => { dialog.open = false; };
+  const first = f.controller.askToLeave();
+  f.$('cancelDiscardButton').onclick();
+  assert.equal(await first, false);
+  const second = f.controller.askToLeave();
+  dialog.onclose();
+  assert.equal(dialog.open, true);
+  // An actual close of the current prompt still cancels the leave action.
+  dialog.open = false; dialog.onclose();
+  assert.equal(await second, false);
+});
+
 test('discard waits for the complete recoverable draft before allowing navigation', async () => {
   const f = fixture({ dirty: true }), gate = deferred();
   const originalSave = f.history.saveDraft;
@@ -276,6 +292,42 @@ test('new edits during a save keep the prompt open and the newer draft recoverab
   assert.equal(f.history.drafts.get('draft-1').content, 'newer content');
   f.$('cancelDiscardButton').onclick();
   assert.equal(await leaving, false);
+});
+
+test('new edits while flushing after a save keep the prompt open until they are saved', async () => {
+  const f = fixture({ dirty: true }), gate = deferred();
+  const originalRemember = f.history.rememberDocument;
+  f.history.rememberDocument = async (record) => { await gate.promise; return originalRemember(record); };
+  f.api.save = async () => { f.state.context.isDirty = false; f.controller.saved(f.api.context()); };
+  const leaving = f.controller.askToLeave();
+  const saving = f.$('saveAndContinueButton').onclick();
+  await tick();
+  assert.equal(f.state.context.isDirty, false);
+  assert.equal(f.$('confirmSaveDialog').open, true);
+  // An already-running paste can finish while the saved document's records flush.
+  f.state.context.revision += 1; f.state.context.isDirty = true; f.state.text = 'paste completed after save';
+  f.controller.changed();
+  gate.resolve(); await saving;
+  assert.equal(f.$('confirmSaveDialog').open, true);
+  assert.equal(f.$('saveAndContinueButton').disabled, false);
+  await f.controller.flush();
+  assert.equal(f.history.drafts.get('draft-1').content, f.state.text);
+  await f.$('saveAndContinueButton').onclick();
+  assert.equal(await leaving, true);
+  assert.equal(f.history.drafts.has('draft-1'), false);
+});
+
+test('switching documents during the post-save flush cancels the pending leave action', async () => {
+  const f = fixture({ dirty: true }), gate = deferred();
+  f.history.rememberDocument = async () => { await gate.promise; };
+  f.api.save = async () => { f.state.context.isDirty = false; };
+  const leaving = f.controller.askToLeave();
+  const saving = f.$('saveAndContinueButton').onclick();
+  await tick();
+  f.state.context = { ...f.state.context, documentId: 2, draftId: 'draft-2', isDirty: true };
+  gate.resolve(); await saving;
+  assert.equal(await leaving, false);
+  assert.equal(f.$('confirmSaveDialog').open, false);
 });
 
 test('same-name drafts are removed by their own row and unchanged active drafts stay deleted', async () => {
