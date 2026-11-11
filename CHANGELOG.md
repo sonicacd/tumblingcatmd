@@ -1,5 +1,21 @@
 # 更新记录 / Changelog
 
+## 0.5.6
+
+### 表格内 HTML 列表兼容 / HTML Lists in Tables
+
+- 修复表格中的 HTML 列表在列表项之间包含 `<br>` 时打开报错或正文丢失的问题，兼容连续换行以及有序、无序列表。
+- 增加表格列表、嵌套列表、三种视图与主题、桌面和窄屏、未修改原文保存及编辑保存的浏览器回归检查。
+- 本次发布 Windows v0.5.6 EXE 与 SHA-256 校验文件；Android 继续使用 v0.5.5 APK。
+
+- Fix opening errors and missing content when HTML lists in Markdown tables contain `<br>` between list items, including repeated breaks and ordered or unordered lists.
+- Add browser regression checks for table and nested lists, all views and themes, desktop and narrow layouts, exact unchanged-source saves, and edited saves.
+- This release ships the Windows v0.5.6 EXE and SHA-256 files. Android remains at v0.5.5.
+
+验证结果与产物信息见 [v0.5.6 发布说明](docs/releases/v0.5.6.md)。
+
+See the [v0.5.6 release notes](docs/releases/v0.5.6.md) for validation and artifact details.
+
 ## 0.5.5
 
 ### 查找定位、高亮与文档可靠性 / Find Navigation, Highlights, and Document Reliability

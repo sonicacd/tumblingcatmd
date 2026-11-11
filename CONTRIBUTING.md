@@ -68,6 +68,7 @@ npm run test:windows
 npm run test:help
 npm run test:position
 npm run test:find
+npm run test:html-tables
 ```
 
 脚本自行启动本地 Vite 服务，退出时关闭服务和隔离浏览器。它们分别覆盖文件往返与草稿恢复、真实 Ctrl+C/Ctrl+V 图文粘贴，以及异步粘贴与保存的竞态。文件选择和原生文件接口使用测试替身；图片请求使用固定样例，截图与日志写入 `work/qa`。原生文件授权、Android 系统文件选择与设备安装仍需单独验证。
@@ -85,6 +86,10 @@ Each script starts and stops its own local Vite server and isolated browser. The
 `test:find` 验证搜索自动定位到首个结果、所有命中高亮、清理与替换后刷新，覆盖普通和大文档、三种视图、三种主题及窄屏。
 
 `test:find` checks automatic navigation to the first result, highlighting of all matches, cleanup, and refresh after replacement across regular and large documents, all three views and themes, and narrow screens.
+
+`test:html-tables` 验证表格内 HTML 列表中的 `<br>` 分隔、嵌套列表、视图切换及保存，覆盖三种主题和桌面/窄屏。可在命令后添加 `-- "本地文件路径"`，通过内存中的文件接口验证该文档，原文件保持不变。
+
+`test:html-tables` checks HTML list separators, nested lists, view switches and saving across all three themes and desktop/narrow layouts. Append `-- "local-file-path"` to exercise a local document through in-memory file interfaces while preserving the original file.
 
 ### 阅读、恢复与附件的开发约定 / Reading, recovery, and attachments
 
